@@ -52,6 +52,21 @@ function App() {
     }
   };
 
+  const handleNChange = (newN) => {
+    setDefaultN(newN);
+    
+    // Sort data by year
+    const sortedData = [...data].sort((a, b) => parseInt(a.year) - parseInt(b.year));
+    
+    // Update active flags based on N
+    const updatedData = sortedData.map((row, index) => ({
+      ...row,
+      active: newN === 0 || index >= sortedData.length - newN
+    }));
+
+    setData(updatedData);
+  };
+
   const handleCalculate = () => {
     if (!data.length) {
       setError('No data to calculate');
@@ -60,10 +75,10 @@ function App() {
 
     // Sort data by year and take last N years
     const sortedData = [...data].sort((a, b) => parseInt(a.year) - parseInt(b.year));
-    const lastNYearsData = sortedData.slice(-defaultN);
+    const activeData = defaultN === 0 ? sortedData : sortedData.slice(-defaultN);
 
     try {
-      const allResults = calculateAll(lastNYearsData, {
+      const allResults = calculateAll(activeData, {
         defaultN,
         fnLimit,
         feLimit
@@ -228,7 +243,7 @@ function App() {
           <Select
             value={defaultN}
             label="n по умолчанию"
-            onChange={(e) => setDefaultN(e.target.value)}
+            onChange={(e) => handleNChange(e.target.value)}
             size="small"
           >
             {[...Array(21)].map((_, i) => (

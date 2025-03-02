@@ -156,7 +156,7 @@ const DataGrid = ({ data, setData }) => {
                 <TableCell align="center">
                   <Checkbox
                     checked={row.active || false}
-                    onChange={(e) => handleChange(index, 'active', e.target.checked)}
+                    disabled
                   />
                 </TableCell>
                 <TableCell align="center">
