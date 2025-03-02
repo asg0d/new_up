@@ -4,6 +4,7 @@ import {
   Button,
   Paper,
   Typography,
+  Container,
   Tabs,
   Tab,
   TextField,
@@ -18,6 +19,15 @@ import ConsoleOutput from './components/ConsoleOutput';
 import { calculateAll } from './services/calculationService';
 import { importExcel, exportExcel } from './services/excelService';
 
+const methodNames = [
+  'nazarov-sipachev',
+  'sipachev-posevich',
+  'maksimov',
+  'sazonov',
+  'pirverdyan',
+  'kambarov'
+];
+
 function App() {
   const [activeTab, setActiveTab] = useState(0);
   const [data, setData] = useState([]);
@@ -26,15 +36,6 @@ function App() {
   const [fnLimit, setFnLimit] = useState(0.15);
   const [feLimit, setFeLimit] = useState(0.85);
   const [error, setError] = useState(null);
-
-  const methodNames = [
-    'nazarov-sipachev',
-    'sipachev-posevich',
-    'maksimov',
-    'sazonov',
-    'pirverdyan',
-    'kambarov'
-  ];
 
   const handleFileImport = async (event) => {
     const file = event.target.files[0];
@@ -57,8 +58,12 @@ function App() {
       return;
     }
 
+    // Sort data by year and take last N years
+    const sortedData = [...data].sort((a, b) => parseInt(a.year) - parseInt(b.year));
+    const lastNYearsData = sortedData.slice(-defaultN);
+
     try {
-      const allResults = calculateAll(data, {
+      const allResults = calculateAll(lastNYearsData, {
         defaultN,
         fnLimit,
         feLimit
@@ -222,12 +227,15 @@ function App() {
           <InputLabel>n по умолчанию</InputLabel>
           <Select
             value={defaultN}
+            label="n по умолчанию"
             onChange={(e) => setDefaultN(e.target.value)}
             size="small"
           >
-            <MenuItem value={11}>11</MenuItem>
-            <MenuItem value={12}>12</MenuItem>
-            <MenuItem value={13}>13</MenuItem>
+            {[...Array(21)].map((_, i) => (
+              <MenuItem key={i} value={i}>
+                {i}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
