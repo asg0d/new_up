@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import DataGrid from './components/DataGrid';
 import ConsoleOutput from './components/ConsoleOutput';
+import ResultsChart from './components/ResultsChart';
 import { calculateAll } from './services/calculationService';
 import { importExcel, exportExcel } from './services/excelService';
 
@@ -36,6 +37,7 @@ function App() {
   const [fnLimit, setFnLimit] = useState(0.15);
   const [feLimit, setFeLimit] = useState(0.85);
   const [error, setError] = useState(null);
+  const [showCharts, setShowCharts] = useState(false);
 
   const handleFileImport = async (event) => {
     const file = event.target.files[0];
@@ -98,6 +100,14 @@ function App() {
       console.error('Error exporting file:', error);
       setError('Error exporting file: ' + error.message);
     }
+  };
+
+  const handleShowCharts = () => {
+    if (!calculationResults[methodNames[activeTab]]) {
+      setError('Сначала выполните расчет');
+      return;
+    }
+    setShowCharts(true);
   };
 
   const currentMethodResults = calculationResults[methodNames[activeTab]];
@@ -286,6 +296,20 @@ function App() {
 
         <Button
           variant="contained"
+          onClick={handleShowCharts}
+          sx={{
+            textTransform: 'none',
+            bgcolor: '#1976d2',
+            '&:hover': {
+              bgcolor: '#1565c0'
+            }
+          }}
+        >
+          Графики
+        </Button>
+
+        <Button
+          variant="contained"
           onClick={handleExport}
           sx={{
             textTransform: 'none',
@@ -298,6 +322,13 @@ function App() {
           Экспорт
         </Button>
       </Paper>
+
+      <ResultsChart
+        open={showCharts}
+        onClose={() => setShowCharts(false)}
+        data={calculationResults[methodNames[activeTab]]}
+        methodName={methodNames[activeTab]}
+      />
     </Box>
   );
 }

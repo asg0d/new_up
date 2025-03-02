@@ -1,65 +1,97 @@
 import React from 'react';
-import { Paper } from '@mui/material';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
-} from 'recharts';
+import { Dialog, DialogTitle, DialogContent, IconButton, Box } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export default function ResultsChart({ data }) {
-  if (!data || !Array.isArray(data)) {
-    return null;
-  }
+const ResultsChart = ({ open, onClose, data, methodName }) => {
+  if (!data || !data.results) return null;
 
-  // Transform data for the chart
-  const chartData = data.map(point => ({
-    x: point.vw,
-    y: point.vlvo,
-    yCalc: point.vw * point.coefficients?.A + point.coefficients?.B
+  const chartData = data.results.map(row => ({
+    x: parseFloat(row.x) || 0,
+    y: parseFloat(row.y) || 0
   }));
 
   return (
-    <Paper sx={{ p: 2, height: 300, width: '100%' }}>
-      <ResponsiveContainer>
-        <LineChart
-          data={chartData}
-          margin={{
-            top: 5,
-            right: 30,
-            left: 20,
-            bottom: 5,
+    <Dialog 
+      open={open} 
+      onClose={onClose}
+      maxWidth="lg"
+      fullWidth
+      PaperProps={{
+        sx: {
+          minHeight: '80vh',
+          maxHeight: '90vh'
+        }
+      }}
+    >
+      <DialogTitle sx={{ 
+        m: 0, 
+        p: 2, 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        bgcolor: '#f8f9fa',
+        borderBottom: '1px solid #e0e0e0'
+      }}>
+        График - {methodName}
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{
+            color: '#666'
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            dataKey="x" 
-            label={{ value: 'Water Velocity (Vw)', position: 'bottom' }}
-          />
-          <YAxis 
-            label={{ value: 'Volume Ratio (Vl/Vo)', angle: -90, position: 'left' }}
-          />
-          <Tooltip />
-          <Legend />
-          <Line 
-            type="monotone" 
-            dataKey="y" 
-            stroke="#8884d8" 
-            activeDot={{ r: 8 }} 
-            name="Actual Values" 
-          />
-          <Line 
-            type="monotone" 
-            dataKey="yCalc" 
-            stroke="#82ca9d" 
-            name="Calculated Values" 
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </Paper>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent sx={{ p: 3 }}>
+        <Box sx={{ height: '70vh' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={chartData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 20,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="x" 
+                type="number"
+                label={{ 
+                  value: 'X', 
+                  position: 'bottom', 
+                  offset: -5 
+                }} 
+                domain={['auto', 'auto']}
+              />
+              <YAxis 
+                label={{ 
+                  value: 'Y', 
+                  angle: -90, 
+                  position: 'insideLeft',
+                  offset: -5
+                }} 
+                domain={['auto', 'auto']}
+              />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="y"
+                name="Y"
+                stroke="#1976d2"
+                dot={{ r: 4 }}
+                activeDot={{ r: 8 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </Box>
+      </DialogContent>
+    </Dialog>
   );
-}
+};
+
+export default ResultsChart;
