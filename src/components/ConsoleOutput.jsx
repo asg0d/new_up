@@ -41,10 +41,24 @@ const ConsoleOutput = ({ result }) => {
         border: '1px solid #e0e0e0',
         mb: 3
       }}>
-        <Typography component="pre" sx={{ mb: 1 }}>
-          X: {result.xDescription}
-          Y: {result.yDescription}
+        <Typography variant="subtitle1" sx={{ mb: 1, color: '#1976d2' }}>
+          Входные данные:
         </Typography>
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr',
+          gap: '8px 16px',
+          '& > span': {
+            fontFamily: 'Consolas, Monaco, monospace',
+            fontSize: '0.9rem',
+            whiteSpace: 'nowrap'
+          }
+        }}>
+          <span>X:</span>
+          <span>{result.xDescription}</span>
+          <span>Y:</span>
+          <span>{result.yDescription}</span>
+        </Box>
       </Box>
 
       <Box sx={{ 
@@ -83,7 +97,7 @@ const ConsoleOutput = ({ result }) => {
             fontFamily: 'Consolas, Monaco, monospace',
             fontSize: '0.85rem',
             '& th': {
-              textAlign: 'left',
+              textAlign: 'right',
               padding: '8px 16px',
               borderBottom: '2px solid #e0e0e0',
               whiteSpace: 'nowrap'
@@ -91,7 +105,11 @@ const ConsoleOutput = ({ result }) => {
             '& td': {
               padding: '8px 16px',
               borderBottom: '1px solid #e0e0e0',
-              whiteSpace: 'nowrap'
+              whiteSpace: 'nowrap',
+              textAlign: 'right'
+            },
+            '& th:first-of-type, & td:first-of-type': {
+              minWidth: '80px'
             }
           }}
         >
