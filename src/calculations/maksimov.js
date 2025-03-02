@@ -13,13 +13,15 @@ export const calculate = (data, options = {}) => {
     const x = parseFloat(row.oil) || 0;  // X = Vн (oil volume)
     const water = parseFloat(row.water) || 0;
     const y = water > 0 ? Math.log(water) : 0;  // Y = ln(Vв) (natural log of water volume)
+    const xy = x * y;
+    const x2 = x * x;
     
     return {
       year: row.year,
       x,
       y,
-      xy: x * y,
-      x2: x * x,
+      xy,
+      x2,
       method: 'Максимов',
       xDescription: 'V нефти',
       yDescription: 'ln(V воды)'

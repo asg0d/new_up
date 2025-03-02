@@ -1,29 +1,31 @@
-import { useState } from 'react';
-import { 
-  Tabs, 
-  Tab, 
-  Button, 
-  TextField, 
-  Box, 
+import React, { useState } from 'react';
+import {
+  Box,
+  Button,
   Paper,
+  Typography,
+  Tabs,
+  Tab,
+  TextField,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
-  Grid
+  Grid,
 } from '@mui/material';
 import DataGrid from './components/DataGrid';
 import ConsoleOutput from './components/ConsoleOutput';
-import { calculationMethods } from './calculations';
+import { calculateAll } from './services/calculationService';
 import { importExcel, exportExcel } from './services/excelService';
 
 function App() {
   const [activeTab, setActiveTab] = useState(0);
   const [data, setData] = useState([]);
-  const [calculationResults, setCalculationResults] = useState(null);
+  const [calculationResults, setCalculationResults] = useState({});
   const [defaultN, setDefaultN] = useState(11);
   const [fnLimit, setFnLimit] = useState(0.15);
   const [feLimit, setFeLimit] = useState(0.85);
+  const [error, setError] = useState(null);
 
   const methodNames = [
     'nazarov-sipachev',
@@ -40,75 +42,126 @@ function App() {
       try {
         const importedData = await importExcel(file);
         setData(importedData);
-        setCalculationResults(null);
+        setCalculationResults({});
+        setError(null);
       } catch (error) {
         console.error('Error importing file:', error);
-        alert('Error importing file: ' + error.message);
+        setError('Error importing file: ' + error.message);
       }
     }
   };
 
   const handleCalculate = () => {
+    if (!data.length) {
+      setError('No data to calculate');
+      return;
+    }
+
     try {
-      console.log('Starting calculation...');
-      console.log('Active tab:', activeTab);
-      console.log('Method name:', methodNames[activeTab]);
-      console.log('Data:', data);
-      
-      const methodName = methodNames[activeTab];
-      const calculateMethod = calculationMethods[methodName];
-      
-      console.log('Calculate method:', calculateMethod);
-      
-      if (calculateMethod) {
-        const results = calculateMethod(data, {
-          defaultN,
-          fnLimit,
-          feLimit
-        });
-        console.log('Calculation results:', results);
-        setCalculationResults(results);
-      }
-    } catch (error) {
-      console.error('Error in calculation:', error);
-      alert('Ошибка при вычислении: ' + error.message);
+      const allResults = calculateAll(data, {
+        defaultN,
+        fnLimit,
+        feLimit
+      });
+      setCalculationResults(allResults);
+      setError(null);
+    } catch (err) {
+      console.error('Error in calculation:', err);
+      setError('Ошибка при вычислении: ' + err.message);
     }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     try {
-      exportExcel(data);
+      await exportExcel(data, calculationResults);
     } catch (error) {
       console.error('Error exporting file:', error);
-      alert('Error exporting file: ' + error.message);
+      setError('Error exporting file: ' + error.message);
     }
   };
 
+  const currentMethodResults = calculationResults[methodNames[activeTab]];
+
   return (
-    <Box sx={{ p: 2, height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Grid container spacing={2} sx={{ flex: 1, minHeight: 0 }}>
+    <Box 
+      sx={{ 
+        p: 3, 
+        height: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column',
+        bgcolor: '#f5f5f5'
+      }}
+    >
+      <Typography 
+        variant="h4" 
+        component="h1" 
+        gutterBottom 
+        sx={{ 
+          mb: 3,
+          color: '#1976d2',
+          fontWeight: 500
+        }}
+      >
+        Инженерный калькулятор
+      </Typography>
+
+      <Grid container spacing={3} sx={{ flex: 1, mb: 3 }}>
         {/* Left side - Data Grid */}
-        <Grid item xs={6} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <Box sx={{ flex: 1, mb: 2, minHeight: 0, overflow: 'auto' }}>
+        <Grid item xs={6}>
+          <Paper 
+            elevation={3}
+            sx={{ 
+              height: '100%',
+              overflow: 'hidden',
+              borderRadius: 2,
+              '& .MuiTableContainer-root': {
+                maxHeight: 'calc(100vh - 300px)',
+                overflow: 'auto'
+              }
+            }}
+          >
             <DataGrid data={data} setData={setData} />
-          </Box>
+          </Paper>
         </Grid>
 
-        {/* Right side - Categories and Results */}
-        <Grid item xs={6} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <Paper sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {/* Right side - Results */}
+        <Grid item xs={6}>
+          <Paper 
+            elevation={3}
+            sx={{ 
+              height: '100%',
+              borderRadius: 2,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            {error && (
+              <Typography 
+                color="error" 
+                sx={{ 
+                  p: 2,
+                  bgcolor: '#ffebee',
+                  borderRadius: '8px',
+                  mb: 2 
+                }}
+              >
+                {error}
+              </Typography>
+            )}
+            
             <Tabs 
               value={activeTab} 
               onChange={(e, v) => setActiveTab(v)}
               variant="scrollable"
-              orientation="horizontal"
-              sx={{ 
+              sx={{
                 borderBottom: 1,
                 borderColor: 'divider',
-                minHeight: 'auto',
+                bgcolor: '#fff',
                 '& .MuiTab-root': {
-                  minHeight: 'auto',
-                  padding: '8px 12px'
+                  minHeight: 48,
+                  textTransform: 'none',
+                  fontSize: '0.95rem'
                 }
               }}
             >
@@ -119,18 +172,42 @@ function App() {
               <Tab label="Пирвердян" />
               <Tab label="Камбаров" />
             </Tabs>
-            <ConsoleOutput 
-              calculationResults={calculationResults} 
-              calculationType={methodNames[activeTab]}
-            />
+
+            <Box sx={{ 
+              flex: 1, 
+              overflow: 'auto',
+              maxHeight: 'calc(100vh - 300px)'
+            }}>
+              {currentMethodResults && (
+                <ConsoleOutput result={currentMethodResults} />
+              )}
+            </Box>
           </Paper>
         </Grid>
       </Grid>
 
-      <Paper sx={{ p: 2, mt: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
+      {/* Bottom Controls */}
+      <Paper 
+        elevation={3}
+        sx={{ 
+          p: 2,
+          borderRadius: 2,
+          display: 'flex',
+          gap: 2,
+          alignItems: 'center',
+          bgcolor: '#fff'
+        }}
+      >
         <Button
           variant="contained"
           component="label"
+          sx={{
+            textTransform: 'none',
+            bgcolor: '#1976d2',
+            '&:hover': {
+              bgcolor: '#1565c0'
+            }
+          }}
         >
           Импорт
           <input
@@ -173,6 +250,13 @@ function App() {
         <Button
           variant="contained"
           onClick={handleCalculate}
+          sx={{
+            textTransform: 'none',
+            bgcolor: '#2e7d32',
+            '&:hover': {
+              bgcolor: '#1b5e20'
+            }
+          }}
         >
           Вычислить
         </Button>
@@ -180,6 +264,13 @@ function App() {
         <Button
           variant="contained"
           onClick={handleExport}
+          sx={{
+            textTransform: 'none',
+            bgcolor: '#ed6c02',
+            '&:hover': {
+              bgcolor: '#e65100'
+            }
+          }}
         >
           Экспорт
         </Button>

@@ -6,13 +6,15 @@ export const calculate = (data, options = {}) => {
     const liquid = parseFloat(row.liquid) || 0;
     const x = liquid > 0 ? Math.pow(liquid, -0.5) : 0;  // X = Vж^(-1/2) (liquid volume to power -1/2)
     const y = parseFloat(row.oil) || 0;  // Y = Vн (oil volume)
+    const xy = x * y;
+    const x2 = x * x;
     
     return {
       year: row.year,
       x,
       y,
-      xy: x * y,
-      x2: x * x,
+      xy,
+      x2,
       method: 'Пирвердян',
       xDescription: 'V жидкости^(-1/2)',
       yDescription: 'V нефти'

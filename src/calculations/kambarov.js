@@ -7,13 +7,15 @@ export const calculate = (data, options = {}) => {
     const oil = parseFloat(row.oil) || 0;
     const liquid = parseFloat(row.liquid) || 0;
     const y = oil * liquid;  // Y = Vн * Vж (oil volume * liquid volume)
+    const xy = x * y;
+    const x2 = x * x;
     
     return {
       year: row.year,
       x,
       y,
-      xy: x * y,
-      x2: x * x,
+      xy,
+      x2,
       method: 'Камбаров',
       xDescription: 'V жидкости',
       yDescription: 'V нефти * V жидкости'

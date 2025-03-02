@@ -1,18 +1,27 @@
 import { calculateRSquared } from './utils';
 
+/**
+ * Calculates Sazonov method results.
+ * 
+ * @param {Array} data - Input data.
+ * @param {Object} options - Options.
+ * @returns {Object} Results.
+ */
 export const calculate = (data, options = {}) => {
   // First pass: calculate x, y values
   const results = data.map(row => {
     const x = parseFloat(row.oil) || 0;  // X = Vн (oil volume)
     const liquid = parseFloat(row.liquid) || 0;
     const y = liquid > 0 ? Math.log(liquid) : 0;  // Y = ln(Vж) (natural log of liquid volume)
+    const xy = x * y;
+    const x2 = x * x;
     
     return {
       year: row.year,
       x,
       y,
-      xy: x * y,
-      x2: x * x,
+      xy,
+      x2,
       method: 'Сазонов',
       xDescription: 'V нефти',
       yDescription: 'ln(V жидкости)'

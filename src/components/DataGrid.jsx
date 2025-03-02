@@ -1,3 +1,4 @@
+import React from 'react';
 import { 
   Table, 
   TableBody, 
@@ -6,10 +7,12 @@ import {
   TableHead, 
   TableRow, 
   Paper,
+  TextField,
+  Typography,
   Checkbox
 } from '@mui/material';
 
-export default function DataGrid({ data, setData }) {
+const DataGrid = ({ data, setData }) => {
   const handleChange = (index, field, value) => {
     const newData = [...data];
     newData[index] = {
@@ -43,66 +46,161 @@ export default function DataGrid({ data, setData }) {
     setData(newData);
   };
 
+  const addRow = () => {
+    setData([...data, { year: '', water: '', oil: '', liquid: '', active: false, waterCut: '' }]);
+  };
+
   return (
-    <TableContainer component={Paper} sx={{ height: '100%', overflow: 'auto' }}>
-      <Table stickyHeader size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell align="center" sx={{ width: '50px' }}>№</TableCell>
-            <TableCell align="center" sx={{ width: '80px' }}>Годы</TableCell>
-            <TableCell align="center" sx={{ minWidth: '120px' }}>Нефти</TableCell>
-            <TableCell align="center" sx={{ minWidth: '120px' }}>Жидкости</TableCell>
-            <TableCell align="center" sx={{ minWidth: '120px' }}>Воды</TableCell>
-            <TableCell align="center" sx={{ minWidth: '120px' }}>Обводненность</TableCell>
-            <TableCell align="center" sx={{ width: '100px' }}>Active points</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {data.map((row, index) => (
-            <TableRow key={index}>
-              <TableCell align="center">
-                {index + 1}
-              </TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  value={row.year || ''}
-                  onChange={(e) => handleChange(index, 'year', e.target.value)}
-                  style={{ width: '100%', textAlign: 'center' }}
-                />
-              </TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  value={row.oil || ''}
-                  onChange={(e) => handleChange(index, 'oil', e.target.value)}
-                  style={{ width: '100%', textAlign: 'center' }}
-                />
-              </TableCell>
-              <TableCell>
-                <input
-                  type="text"
-                  value={row.liquid || ''}
-                  onChange={(e) => handleChange(index, 'liquid', e.target.value)}
-                  style={{ width: '100%', textAlign: 'center' }}
-                />
-              </TableCell>
-              <TableCell align="center">
-                {row.water || '0'}
-              </TableCell>
-              <TableCell align="center">
-                {row.waterCut || '0'}
-              </TableCell>
-              <TableCell align="center">
-                <Checkbox
-                  checked={row.active || false}
-                  onChange={(e) => handleChange(index, 'active', e.target.checked)}
+    <>
+      <Typography 
+        variant="h6" 
+        sx={{ 
+          p: 2, 
+          borderBottom: '1px solid #e0e0e0',
+          color: '#1976d2',
+          fontWeight: 500
+        }}
+      >
+        Входные данные
+      </Typography>
+      
+      <TableContainer component={Paper} sx={{ height: '100%', overflow: 'auto' }}>
+        <Table 
+          size="small" 
+          stickyHeader 
+          sx={{
+            '& .MuiTableCell-head': {
+              bgcolor: '#f8f9fa',
+              fontWeight: 600,
+              color: '#1a1a1a'
+            },
+            '& .MuiTableCell-root': {
+              borderColor: '#e0e0e0'
+            },
+            '& .MuiTableRow-root:hover': {
+              bgcolor: '#f5f5f5'
+            }
+          }}
+        >
+          <TableHead>
+            <TableRow>
+              <TableCell align="center" sx={{ width: '50px' }}>№</TableCell>
+              <TableCell align="center" sx={{ width: '80px' }}>Годы</TableCell>
+              <TableCell align="center" sx={{ minWidth: '120px' }}>Нефти</TableCell>
+              <TableCell align="center" sx={{ minWidth: '120px' }}>Жидкости</TableCell>
+              <TableCell align="center" sx={{ minWidth: '120px' }}>Воды</TableCell>
+              <TableCell align="center" sx={{ minWidth: '120px' }}>Обводненность</TableCell>
+              <TableCell align="center" sx={{ width: '100px' }}>Active points</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.map((row, index) => (
+              <TableRow key={index}>
+                <TableCell align="center">
+                  {index + 1}
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    size="small"
+                    value={row.year || ''}
+                    onChange={(e) => handleChange(index, 'year', e.target.value)}
+                    variant="outlined"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: '#e0e0e0',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#1976d2',
+                        }
+                      }
+                    }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={row.oil || ''}
+                    onChange={(e) => handleChange(index, 'oil', e.target.value)}
+                    variant="outlined"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: '#e0e0e0',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#1976d2',
+                        }
+                      }
+                    }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={row.liquid || ''}
+                    onChange={(e) => handleChange(index, 'liquid', e.target.value)}
+                    variant="outlined"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: '#e0e0e0',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#1976d2',
+                        }
+                      }
+                    }}
+                  />
+                </TableCell>
+                <TableCell align="center">
+                  {row.water || '0'}
+                </TableCell>
+                <TableCell align="center">
+                  {row.waterCut || '0'}
+                </TableCell>
+                <TableCell align="center">
+                  <Checkbox
+                    checked={row.active || false}
+                    onChange={(e) => handleChange(index, 'active', e.target.checked)}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+            <TableRow>
+              <TableCell colSpan={7} sx={{ border: 'none' }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Нажмите Enter для добавления строки"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addRow();
+                    }
+                  }}
+                  variant="outlined"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: '#f8f9fa',
+                      '& fieldset': {
+                        borderColor: '#e0e0e0',
+                      },
+                      '&:hover fieldset': {
+                        borderColor: '#1976d2',
+                      }
+                    }
+                  }}
                 />
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </>
   );
-}
+};
+
+export default DataGrid;

@@ -14,13 +14,15 @@ export const calculate = (data, options = {}) => {
     const oil = parseFloat(row.oil) || 0;
     const liquid = parseFloat(row.liquid) || 0;
     const y = oil !== 0 ? liquid / oil : 0;  // Y = Vж/Vн (liquid/oil ratio)
+    const xy = x * y;
+    const x2 = x * x;
     
     return {
       year: row.year,
       x,
       y,
-      xy: x * y,
-      x2: x * x,
+      xy,
+      x2,
       method: 'Назаров-Сипачев',
       xDescription: 'V воды',
       yDescription: 'V жидкости / V нефти'
