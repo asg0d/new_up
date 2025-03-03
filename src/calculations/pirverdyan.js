@@ -36,13 +36,19 @@ export const calculate = (data, options = {}) => {
   const A = (sumY - B * sumX) / data.length;
 
   // Calculate R²
-  const yMean = sumY / data.length;
+  const N = data.length;
+  const yMean = sumY / N;
   const ssTotal = results.reduce((sum, p) => sum + Math.pow(p.y - yMean, 2), 0);
   const ssResidual = results.reduce((sum, p) => {
-    const yPredicted = A + B * p.x;  // Note: Order is A + Bx for prediction
+    const yPredicted = A * p.x + B;
     return sum + Math.pow(p.y - yPredicted, 2);
   }, 0);
   const R2 = 1 - (ssResidual / ssTotal);
+
+  // Calculate extractable and remaining oil reserves
+  const extractableOilReserves = A;
+  const lastYearOil = parseFloat(data[data.length - 1].oil) || 0;
+  const remainingOilReserves = extractableOilReserves - lastYearOil;
 
   return {
     results,
@@ -58,6 +64,8 @@ export const calculate = (data, options = {}) => {
       sumX2,
       sumXSquared: sumX * sumX
     },
+    extractableOilReserves,
+    remainingOilReserves,
     method: 'Пирвердян',
     xDescription: 'V воды',
     yDescription: 'V жидкости / V нефти'

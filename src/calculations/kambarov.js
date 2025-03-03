@@ -27,23 +27,29 @@ export const calculate = (data, options = {}) => {
   const sumY = results.reduce((sum, p) => sum + p.y, 0);
   const sumXY = results.reduce((sum, p) => sum + p.xy, 0);
   const sumX2 = results.reduce((sum, p) => sum + p.x2, 0);
+  const N = data.length;
 
   // B = (N * ∑xiyi - ∑xi * ∑yi) / (N * ∑xi² - ∑xi * ∑xi)
-  const numeratorB = data.length * sumXY - sumX * sumY;
-  const denominatorB = data.length * sumX2 - sumX * sumX;
+  const numeratorB = N * sumXY - sumX * sumY;
+  const denominatorB = N * sumX2 - sumX * sumX;
   const B = denominatorB !== 0 ? numeratorB / denominatorB : 0;
 
   // A = (∑yi - B * ∑xi) / N
-  const A = (sumY - B * sumX) / data.length;
+  const A = (sumY - B * sumX) / N;
 
   // Calculate R²
-  const yMean = sumY / data.length;
+  const yMean = sumY / N;
   const ssTotal = results.reduce((sum, p) => sum + Math.pow(p.y - yMean, 2), 0);
   const ssResidual = results.reduce((sum, p) => {
-    const yPredicted = A + B * p.x;  // Note: Order is A + Bx for prediction
+    const yPredicted = A * p.x + B;
     return sum + Math.pow(p.y - yPredicted, 2);
   }, 0);
   const R2 = 1 - (ssResidual / ssTotal);
+
+  // Calculate extractable and remaining oil reserves
+  const extractableOilReserves = B;
+  const lastYearOil = parseFloat(data[data.length - 1].oil) || 0;
+  const remainingOilReserves = extractableOilReserves - lastYearOil;
 
   return {
     results,
@@ -59,6 +65,8 @@ export const calculate = (data, options = {}) => {
       sumX2,
       sumXSquared: sumX * sumX
     },
+    extractableOilReserves,
+    remainingOilReserves,
     method: 'Камбаров',
     xDescription: 'V воды',
     yDescription: 'V жидкости / V нефти'

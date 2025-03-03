@@ -17,6 +17,7 @@ import {
 import DataGrid from './components/DataGrid';
 import ConsoleOutput from './components/ConsoleOutput';
 import ResultsChart from './components/ResultsChart';
+import ResultsTable from './components/ResultsTable';
 import { calculateAll } from './services/calculationService';
 import { importExcel, exportExcel } from './services/excelService';
 
@@ -38,6 +39,7 @@ function App() {
   const [feLimit, setFeLimit] = useState(0.85);
   const [error, setError] = useState(null);
   const [showCharts, setShowCharts] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   const handleFileImport = async (event) => {
     const file = event.target.files[0];
@@ -56,16 +58,11 @@ function App() {
 
   const handleNChange = (newN) => {
     setDefaultN(newN);
-    
-    // Sort data by year
     const sortedData = [...data].sort((a, b) => parseInt(a.year) - parseInt(b.year));
-    
-    // Update active flags based on N
     const updatedData = sortedData.map((row, index) => ({
       ...row,
       active: newN === 0 || index >= sortedData.length - newN
     }));
-
     setData(updatedData);
   };
 
@@ -75,7 +72,6 @@ function App() {
       return;
     }
 
-    // Sort data by year and take last N years
     const sortedData = [...data].sort((a, b) => parseInt(a.year) - parseInt(b.year));
     const activeData = defaultN === 0 ? sortedData : sortedData.slice(-defaultN);
 
@@ -110,142 +106,29 @@ function App() {
     setShowCharts(true);
   };
 
+  const handleShowResults = () => {
+    setShowResults(!showResults);
+  };
+
   const currentMethodResults = calculationResults[methodNames[activeTab]];
 
   return (
-    <Box 
-      sx={{ 
-        p: 3, 
-        height: '100vh', 
-        display: 'flex', 
-        flexDirection: 'column',
-        bgcolor: '#f5f5f5'
-      }}
-    >
-      <Typography 
-        variant="h4" 
-        component="h1" 
-        gutterBottom 
-        sx={{ 
-          mb: 3,
-          color: '#1976d2',
-          fontWeight: 500
-        }}
-      >
+    <Box sx={{ 
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden'
+    }}>
+      {/* Header */}
+      <Typography variant="h4" component="h1" sx={{ p: 3, pb: 0, color: '#1976d2', fontWeight: 500 }}>
         Инженерный калькулятор
       </Typography>
 
-      <Grid container spacing={3} sx={{ flex: 1, mb: 3 }}>
-        {/* Left side - Data Grid */}
-        <Grid item xs={6}>
-          <Paper 
-            elevation={3}
-            sx={{ 
-              height: '100%',
-              overflow: 'hidden',
-              borderRadius: 2,
-              '& .MuiTableContainer-root': {
-                maxHeight: 'calc(100vh - 300px)',
-                overflow: 'auto'
-              }
-            }}
-          >
-            <DataGrid data={data} setData={setData} />
-          </Paper>
-        </Grid>
-
-        {/* Right side - Results */}
-        <Grid item xs={6}>
-          <Paper 
-            elevation={3}
-            sx={{ 
-              height: '100%',
-              borderRadius: 2,
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
-          >
-            {error && (
-              <Typography 
-                color="error" 
-                sx={{ 
-                  p: 2,
-                  bgcolor: '#ffebee',
-                  borderRadius: '8px',
-                  mb: 2 
-                }}
-              >
-                {error}
-              </Typography>
-            )}
-            
-            <Tabs 
-              value={activeTab} 
-              onChange={(e, v) => setActiveTab(v)}
-              variant="scrollable"
-              sx={{
-                borderBottom: 1,
-                borderColor: 'divider',
-                bgcolor: '#fff',
-                '& .MuiTab-root': {
-                  minHeight: 48,
-                  textTransform: 'none',
-                  fontSize: '0.95rem'
-                }
-              }}
-            >
-              <Tab label="Назаров-Сипачев" />
-              <Tab label="Сипачев-Посевич" />
-              <Tab label="Максимов" />
-              <Tab label="Сазонов" />
-              <Tab label="Пирвердян" />
-              <Tab label="Камбаров" />
-            </Tabs>
-
-            <Box sx={{ 
-              flex: 1, 
-              overflow: 'auto',
-              maxHeight: 'calc(100vh - 300px)'
-            }}>
-              {currentMethodResults && (
-                <ConsoleOutput result={currentMethodResults} />
-              )}
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Bottom Controls */}
-      <Paper 
-        elevation={3}
-        sx={{ 
-          p: 2,
-          borderRadius: 2,
-          display: 'flex',
-          gap: 2,
-          alignItems: 'center',
-          bgcolor: '#fff'
-        }}
-      >
-        <Button
-          variant="contained"
-          component="label"
-          sx={{
-            textTransform: 'none',
-            bgcolor: '#1976d2',
-            '&:hover': {
-              bgcolor: '#1565c0'
-            }
-          }}
-        >
+      {/* Top Controls */}
+      <Paper sx={{ m: 3, mb: 0, p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
+        <Button variant="contained" component="label">
           Импорт
-          <input
-            type="file"
-            hidden
-            accept=".xlsx,.xls"
-            onChange={handleFileImport}
-          />
+          <input type="file" hidden accept=".xlsx,.xls" onChange={handleFileImport} />
         </Button>
 
         <FormControl sx={{ minWidth: 120 }}>
@@ -257,9 +140,7 @@ function App() {
             size="small"
           >
             {[...Array(21)].map((_, i) => (
-              <MenuItem key={i} value={i}>
-                {i}
-              </MenuItem>
+              <MenuItem key={i} value={i}>{i}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -280,55 +161,69 @@ function App() {
           sx={{ width: 100 }}
         />
 
-        <Button
-          variant="contained"
-          onClick={handleCalculate}
-          sx={{
-            textTransform: 'none',
-            bgcolor: '#2e7d32',
-            '&:hover': {
-              bgcolor: '#1b5e20'
-            }
-          }}
-        >
+        <Box sx={{ flex: 1 }} />
+
+        <Button variant="contained" onClick={handleCalculate}>
           Вычислить
         </Button>
-
-        <Button
-          variant="contained"
-          onClick={handleShowCharts}
-          sx={{
-            textTransform: 'none',
-            bgcolor: '#1976d2',
-            '&:hover': {
-              bgcolor: '#1565c0'
-            }
-          }}
-        >
+        <Button variant="outlined" onClick={handleShowResults}>
+          Результаты
+        </Button>
+        <Button variant="outlined" onClick={handleShowCharts}>
           Графики
         </Button>
-
-        <Button
-          variant="contained"
-          onClick={handleExport}
-          sx={{
-            textTransform: 'none',
-            bgcolor: '#ed6c02',
-            '&:hover': {
-              bgcolor: '#e65100'
-            }
-          }}
-        >
+        <Button variant="outlined" onClick={handleExport}>
           Экспорт
         </Button>
       </Paper>
 
+      {/* Main Content */}
+      <Box sx={{ flex: 1, m: 3, mt: 2, display: 'flex', gap: 2, minHeight: 0 }}>
+        {/* Left side - Data Grid */}
+        <Paper sx={{ flex: 1, overflow: 'hidden', borderRadius: 2 }}>
+          <Box sx={{ height: '100%', overflow: 'auto' }}>
+            <DataGrid data={data} setData={setData} />
+          </Box>
+        </Paper>
+
+        {/* Right side - Results */}
+        <Paper sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: 2 }}>
+          <Tabs 
+            value={activeTab} 
+            onChange={(e, v) => setActiveTab(v)}
+            variant="scrollable"
+            sx={{ borderBottom: 1, borderColor: 'divider' }}
+          >
+            <Tab label="Назаров-Сипачев" />
+            <Tab label="Сипачев-Посевич" />
+            <Tab label="Максимов" />
+            <Tab label="Сазонов" />
+            <Tab label="Пирвердян" />
+            <Tab label="Камбаров" />
+          </Tabs>
+
+          <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+            {currentMethodResults && !showResults && (
+              <ConsoleOutput result={currentMethodResults} />
+            )}
+            {showResults && Object.keys(calculationResults).length > 0 && (
+              <ResultsTable results={Object.values(calculationResults)} />
+            )}
+          </Box>
+        </Paper>
+      </Box>
+
       <ResultsChart
         open={showCharts}
         onClose={() => setShowCharts(false)}
-        data={calculationResults[methodNames[activeTab]]}
-        methodName={methodNames[activeTab]}
+        data={calculationResults[methodNames[activeTab]]?.results || []}
       />
+
+      {error && (
+        <Typography color="error" sx={{ mx: 3, p: 2, bgcolor: '#ffebee', borderRadius: 1 }}>
+          {error}
+        </Typography>
+      )}
     </Box>
   );
 }

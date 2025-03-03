@@ -1,181 +1,109 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Paper } from '@mui/material';
 
 const ConsoleOutput = ({ result }) => {
-  if (!result || !result.results || !result.coefficients) {
-    return null;
-  }
-
-  const { results, coefficients, sums } = result;
-
   const formatNumber = (num) => {
-    if (num === undefined || num === null) return 'N/A';
-    return typeof num === 'number' ? num.toFixed(4) : num.toString();
+    if (num === null || num === undefined) return 'N/A';
+    return Number(num).toFixed(4);
   };
 
+  if (!result) return null;
+
   return (
-    <Box sx={{ 
-      p: 3,
-      color: '#1a1a1a',
-      '& pre': {
-        margin: 0,
-        fontSize: '0.9rem',
-        lineHeight: 1.6
-      }
-    }}>
-      <Typography 
-        variant="h6" 
-        sx={{ 
-          mb: 2,
-          color: '#1976d2',
-          fontWeight: 500
-        }}
-      >
+    <Box>
+      <Typography variant="h6" sx={{ mb: 2, color: '#1976d2' }}>
         {result.method}
       </Typography>
 
-      <Box sx={{ 
-        bgcolor: '#f8f9fa',
-        p: 2,
-        borderRadius: 1,
-        border: '1px solid #e0e0e0',
-        mb: 3
-      }}>
-        <Typography variant="subtitle1" sx={{ mb: 1, color: '#1976d2' }}>
+      {/* Входные данные */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
           Входные данные:
         </Typography>
-        <Box sx={{
-          display: 'grid',
-          gridTemplateColumns: 'auto 1fr',
-          gap: '8px 16px',
-          '& > span': {
-            fontFamily: 'Consolas, Monaco, monospace',
-            fontSize: '0.9rem',
-            whiteSpace: 'nowrap'
-          }
-        }}>
-          <span>X:</span>
-          <span>{result.xDescription}</span>
-          <span>Y:</span>
-          <span>{result.yDescription}</span>
+        <Box sx={{ fontFamily: 'monospace' }}>
+          <div>X: {result.xDescription}</div>
+          <div>Y: {result.yDescription}</div>
         </Box>
-      </Box>
+      </Paper>
 
-      {sums && (
-        <Box sx={{ 
-          bgcolor: '#f8f9fa',
-          p: 2,
-          borderRadius: 1,
-          border: '1px solid #e0e0e0',
-          mb: 3
-        }}>
-          <Typography variant="subtitle1" sx={{ mb: 1, color: '#1976d2' }}>
-            Суммы:
-          </Typography>
-          <Box sx={{
-            display: 'grid',
-            gridTemplateColumns: 'auto 1fr',
-            gap: '8px 16px',
-            '& > span': {
-              fontFamily: 'Consolas, Monaco, monospace',
-              fontSize: '0.9rem',
-              whiteSpace: 'nowrap'
-            }
-          }}>
-            <span>Σx:</span>
-            <span>{formatNumber(sums.sumX)}</span>
-            <span>Σy:</span>
-            <span>{formatNumber(sums.sumY)}</span>
-            <span>Σ(xy):</span>
-            <span>{formatNumber(sums.sumXY)}</span>
-            <span>Σ(x²):</span>
-            <span>{formatNumber(sums.sumX2)}</span>
-            <span>(Σx)²:</span>
-            <span>{formatNumber(sums.sumXSquared)}</span>
-          </Box>
+      {/* Суммы */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+          Суммы:
+        </Typography>
+        <Box sx={{ fontFamily: 'monospace' }}>
+          <div>Σx = {formatNumber(result.sums.sumX)}</div>
+          <div>Σy = {formatNumber(result.sums.sumY)}</div>
+          <div>Σxy = {formatNumber(result.sums.sumXY)}</div>
+          <div>Σx² = {formatNumber(result.sums.sumX2)}</div>
+          <div>(Σx)² = {formatNumber(result.sums.sumXSquared)}</div>
         </Box>
-      )}
+      </Paper>
 
-      <Box sx={{ 
-        bgcolor: '#f8f9fa',
-        p: 2,
-        borderRadius: 1,
-        border: '1px solid #e0e0e0',
-        mb: 3
-      }}>
-        <Typography variant="subtitle1" sx={{ mb: 1, color: '#1976d2' }}>
+      {/* Коэффициенты */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
           Коэффициенты:
         </Typography>
-        <Typography component="pre">
-          A = {formatNumber(coefficients.A)}
-          B = {formatNumber(coefficients.B)}
-          R² = {formatNumber(coefficients.R2)}
-        </Typography>
-      </Box>
+        <Box sx={{ fontFamily: 'monospace' }}>
+          <div>A = {formatNumber(result.coefficients.A)}</div>
+          <div>B = {formatNumber(result.coefficients.B)}</div>
+        </Box>
+      </Paper>
 
-      <Box sx={{ 
-        bgcolor: '#f8f9fa',
-        p: 2,
-        borderRadius: 1,
-        border: '1px solid #e0e0e0',
-        overflowX: 'auto'
-      }}>
-        <Typography variant="subtitle1" sx={{ mb: 1, color: '#1976d2' }}>
+      {/* Результаты */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
           Результаты:
         </Typography>
-        <Box 
-          component="table" 
-          sx={{ 
-            width: '100%',
-            borderCollapse: 'separate',
-            borderSpacing: '0 4px',
-            fontFamily: 'Consolas, Monaco, monospace',
-            fontSize: '0.85rem',
-            '& th': {
-              textAlign: 'right',
-              padding: '8px 16px',
-              borderBottom: '2px solid #e0e0e0',
-              whiteSpace: 'nowrap'
-            },
-            '& td': {
-              padding: '8px 16px',
-              borderBottom: '1px solid #e0e0e0',
-              whiteSpace: 'nowrap',
-              textAlign: 'right'
-            },
-            '& th:first-of-type, & td:first-of-type': {
-              minWidth: '80px'
-            }
-          }}
-        >
-          <thead>
-            <tr>
-              <th>Год</th>
-              <th>X</th>
-              <th>Y</th>
-              <th>XY</th>
-              <th>X²</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((row, index) => {
-              const x = parseFloat(row.x) || 0;
-              const y = parseFloat(row.y) || 0;
-              const xy = x * y;
-              const x2 = x * x;
-              return (
-                <tr key={index}>
-                  <td>{row.year}</td>
-                  <td>{formatNumber(x)}</td>
-                  <td>{formatNumber(y)}</td>
-                  <td>{formatNumber(xy)}</td>
-                  <td>{formatNumber(x2)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
+        <Box sx={{ fontFamily: 'monospace' }}>
+          <div>V извлекаемые = {formatNumber(result.extractableOilReserves)}</div>
+          <div>V остаточные = {formatNumber(result.remainingOilReserves)}</div>
         </Box>
-      </Box>
+      </Paper>
+
+      {/* Таблица результатов */}
+      {result.results && (
+        <Paper sx={{ p: 2 }}>
+          <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
+            Таблица результатов:
+          </Typography>
+          <Box sx={{ overflowX: 'auto' }}>
+            <table style={{ 
+              width: '100%', 
+              borderCollapse: 'collapse', 
+              fontFamily: 'monospace'
+            }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: '8px', textAlign: 'right', borderBottom: '2px solid #e0e0e0' }}>Год</th>
+                  <th style={{ padding: '8px', textAlign: 'right', borderBottom: '2px solid #e0e0e0' }}>X</th>
+                  <th style={{ padding: '8px', textAlign: 'right', borderBottom: '2px solid #e0e0e0' }}>Y</th>
+                  <th style={{ padding: '8px', textAlign: 'right', borderBottom: '2px solid #e0e0e0' }}>XY</th>
+                  <th style={{ padding: '8px', textAlign: 'right', borderBottom: '2px solid #e0e0e0' }}>X²</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.results.map((row, index) => {
+                  const x = parseFloat(row.x) || 0;
+                  const y = parseFloat(row.y) || 0;
+                  const xy = x * y;
+                  const x2 = x * x;
+                  return (
+                    <tr key={index}>
+                      <td style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e0e0e0' }}>{row.year}</td>
+                      <td style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e0e0e0' }}>{formatNumber(x)}</td>
+                      <td style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e0e0e0' }}>{formatNumber(y)}</td>
+                      <td style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e0e0e0' }}>{formatNumber(xy)}</td>
+                      <td style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e0e0e0' }}>{formatNumber(x2)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </Box>
+        </Paper>
+      )}
     </Box>
   );
 };

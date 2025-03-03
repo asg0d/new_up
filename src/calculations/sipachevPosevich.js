@@ -53,6 +53,14 @@ export const calculate = (data, options = {}) => {
   }, 0);
   const R2 = 1 - (ssResidual / ssTotal);
 
+  // Calculate extractable and remaining oil reserves
+  const extractableOilReserves = A !== 0 ? 1 / A : null;
+  const lastYearOil = parseFloat(data[data.length - 1].oil) || 0;
+  const remainingOilReserves = extractableOilReserves !== null ? extractableOilReserves - lastYearOil : null;
+
+  // Calculate Vmax = 1/A
+  const vMax = A !== 0 ? 1 / A : null;
+
   return {
     results,
     coefficients: {
@@ -67,6 +75,9 @@ export const calculate = (data, options = {}) => {
       sumX2,
       sumXSquared: sumX * sumX
     },
+    extractableOilReserves,
+    remainingOilReserves,
+    vMax,
     method: 'Сипачев-Посевич',
     xDescription: 'V воды',
     yDescription: 'V жидкости / V нефти'

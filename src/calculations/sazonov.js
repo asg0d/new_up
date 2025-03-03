@@ -52,6 +52,12 @@ export const calculate = (data, options = {}) => {
   }, 0);
   const R2 = 1 - (ssResidual / ssTotal);
 
+  // Calculate extractable and remaining oil reserves
+  const totalOil = data.reduce((sum, row) => sum + (parseFloat(row.oil) || 0), 0);
+  const extractableOilReserves = null; 
+  const lastYearOil = parseFloat(data[data.length - 1].oil) || 0;
+  const remainingOilReserves = null;
+
   return {
     results,
     coefficients: {
@@ -66,6 +72,8 @@ export const calculate = (data, options = {}) => {
       sumX2,
       sumXSquared: sumX * sumX
     },
+    extractableOilReserves,
+    remainingOilReserves,
     method: 'Сазонов',
     xDescription: 'V воды',
     yDescription: 'V жидкости / V нефти'
