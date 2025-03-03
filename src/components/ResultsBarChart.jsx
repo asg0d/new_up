@@ -4,10 +4,12 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  BarController,
   Title,
   Tooltip,
   Legend,
   LineElement,
+  LineController,
   PointElement
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
@@ -16,7 +18,9 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  BarController,
   LineElement,
+  LineController,
   PointElement,
   Title,
   Tooltip,
@@ -35,25 +39,27 @@ const ResultsBarChart = ({ results }) => {
     labels,
     datasets: [
       {
-        type: 'bar',
         label: 'V остаточные',
         data: validResults.map(result => result.remainingOilReserves),
         backgroundColor: 'rgba(25, 118, 210, 0.6)',
         borderColor: 'rgba(25, 118, 210, 1)',
         borderWidth: 1,
-      },
-      {
-        type: 'line',
-        label: 'V среднее',
-        data: Array(labels.length).fill(averageValue),
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 2,
-        borderDash: [5, 5],
-        pointStyle: false,
-        fill: false
       }
     ]
   };
+
+  if (averageValue !== null) {
+    data.datasets.push({
+      type: 'line',
+      label: 'V среднее',
+      data: Array(labels.length).fill(averageValue),
+      borderColor: 'rgba(255, 99, 132, 1)',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      pointStyle: false,
+      fill: false
+    });
+  }
 
   const options = {
     responsive: true,
