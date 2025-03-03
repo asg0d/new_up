@@ -1,15 +1,48 @@
-import React from 'react';
-import { Dialog, DialogTitle, DialogContent, IconButton, Box } from '@mui/material';
+import React, { useState } from 'react';
+import { Dialog, DialogTitle, DialogContent, IconButton, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const ResultsChart = ({ open, onClose, data, methodName }) => {
-  if (!data || !data.results) return null;
+const COLORS = [
+  '#1976d2', // blue
+  '#dc004e', // red
+  '#388e3c', // green
+  '#f57c00', // orange
+  '#6d1b7b', // purple
+  '#1565c0'  // dark blue
+];
 
-  const chartData = data.results.map(row => ({
-    x: parseFloat(row.x) || 0,
-    y: parseFloat(row.y) || 0
-  }));
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div style={{ 
+        backgroundColor: 'white', 
+        padding: '10px', 
+        border: '1px solid #ccc',
+        borderRadius: '4px'
+      }}>
+        <p><strong>Год:</strong> {data.year}</p>
+        <p><strong>X:</strong> {data.x.toFixed(4)}</p>
+        <p><strong>Y:</strong> {data.y.toFixed(4)}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const ResultsChart = ({ open, onClose, results }) => {
+  const [selectedMethod, setSelectedMethod] = useState('all');
+
+  if (!results || !results.length) return null;
+
+  const methodsWithData = results.filter(method => 
+    method.results && method.results.length > 0
+  );
+
+  const displayedMethods = selectedMethod === 'all' 
+    ? methodsWithData 
+    : methodsWithData.filter(m => m.method === selectedMethod);
 
   return (
     <Dialog 
@@ -33,7 +66,24 @@ const ResultsChart = ({ open, onClose, data, methodName }) => {
         bgcolor: '#f8f9fa',
         borderBottom: '1px solid #e0e0e0'
       }}>
-        График - {methodName}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+          <span>График X-Y</span>
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>Метод</InputLabel>
+            <Select
+              value={selectedMethod}
+              label="Метод"
+              onChange={(e) => setSelectedMethod(e.target.value)}
+            >
+              <MenuItem value="all">Все методы</MenuItem>
+              {methodsWithData.map((method, index) => (
+                <MenuItem key={method.method} value={method.method}>
+                  {method.method}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
         <IconButton
           aria-label="close"
           onClick={onClose}
@@ -47,8 +97,7 @@ const ResultsChart = ({ open, onClose, data, methodName }) => {
       <DialogContent sx={{ p: 3 }}>
         <Box sx={{ height: '70vh' }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={chartData}
+            <ScatterChart
               margin={{
                 top: 20,
                 right: 30,
@@ -58,35 +107,43 @@ const ResultsChart = ({ open, onClose, data, methodName }) => {
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey="x" 
                 type="number"
+                dataKey="x"
+                name="X"
                 label={{ 
                   value: 'X', 
                   position: 'bottom', 
                   offset: -5 
-                }} 
-                domain={['auto', 'auto']}
+                }}
               />
               <YAxis 
+                type="number"
+                dataKey="y"
+                name="Y"
                 label={{ 
                   value: 'Y', 
                   angle: -90, 
                   position: 'insideLeft',
                   offset: -5
-                }} 
-                domain={['auto', 'auto']}
+                }}
               />
-              <Tooltip />
+              <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Line
-                type="monotone"
-                dataKey="y"
-                name="Y"
-                stroke="#1976d2"
-                dot={{ r: 4 }}
-                activeDot={{ r: 8 }}
-              />
-            </LineChart>
+              {displayedMethods.map((method, index) => (
+                <Scatter
+                  key={method.method}
+                  name={method.method}
+                  data={method.results.map(r => ({
+                    x: r.x,
+                    y: r.y,
+                    year: r.year
+                  }))}
+                  fill={COLORS[index % COLORS.length]}
+                  line
+                  shape="circle"
+                />
+              ))}
+            </ScatterChart>
           </ResponsiveContainer>
         </Box>
       </DialogContent>

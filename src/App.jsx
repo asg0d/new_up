@@ -216,7 +216,7 @@ function App() {
       <ResultsChart
         open={showCharts}
         onClose={() => setShowCharts(false)}
-        data={calculationResults[methodNames[activeTab]]?.results || []}
+        results={Object.values(calculationResults)}
       />
 
       {error && (
