@@ -6,7 +6,7 @@ const ConsoleOutput = ({ result }) => {
     return null;
   }
 
-  const { results, coefficients } = result;
+  const { results, coefficients, sums } = result;
 
   const formatNumber = (num) => {
     if (num === undefined || num === null) return 'N/A';
@@ -60,6 +60,41 @@ const ConsoleOutput = ({ result }) => {
           <span>{result.yDescription}</span>
         </Box>
       </Box>
+
+      {sums && (
+        <Box sx={{ 
+          bgcolor: '#f8f9fa',
+          p: 2,
+          borderRadius: 1,
+          border: '1px solid #e0e0e0',
+          mb: 3
+        }}>
+          <Typography variant="subtitle1" sx={{ mb: 1, color: '#1976d2' }}>
+            Суммы:
+          </Typography>
+          <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr',
+            gap: '8px 16px',
+            '& > span': {
+              fontFamily: 'Consolas, Monaco, monospace',
+              fontSize: '0.9rem',
+              whiteSpace: 'nowrap'
+            }
+          }}>
+            <span>Σx:</span>
+            <span>{formatNumber(sums.sumX)}</span>
+            <span>Σy:</span>
+            <span>{formatNumber(sums.sumY)}</span>
+            <span>Σ(xy):</span>
+            <span>{formatNumber(sums.sumXY)}</span>
+            <span>Σ(x²):</span>
+            <span>{formatNumber(sums.sumX2)}</span>
+            <span>(Σx)²:</span>
+            <span>{formatNumber(sums.sumXSquared)}</span>
+          </Box>
+        </Box>
+      )}
 
       <Box sx={{ 
         bgcolor: '#f8f9fa',

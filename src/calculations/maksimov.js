@@ -59,8 +59,15 @@ export const calculate = (data, options = {}) => {
       B,
       R2
     },
+    sums: {
+      sumX,
+      sumY,
+      sumXY,
+      sumX2,
+      sumXSquared: sumX * sumX
+    },
     method: 'Максимов',
-    xDescription: 'V нефти',
-    yDescription: 'ln(V воды)'
+    xDescription: 'V воды',
+    yDescription: 'V жидкости / V нефти'
   };
 };

@@ -16,8 +16,8 @@ export const calculate = (data, options = {}) => {
       xy,
       x2,
       method: 'Пирвердян',
-      xDescription: 'V жидкости^(-1/2)',
-      yDescription: 'V нефти'
+      xDescription: 'V воды',
+      yDescription: 'V жидкости / V нефти'
     };
   });
 
@@ -51,8 +51,15 @@ export const calculate = (data, options = {}) => {
       B,
       R2
     },
+    sums: {
+      sumX,
+      sumY,
+      sumXY,
+      sumX2,
+      sumXSquared: sumX * sumX
+    },
     method: 'Пирвердян',
-    xDescription: 'V жидкости^(-1/2)',
-    yDescription: 'V нефти'
+    xDescription: 'V воды',
+    yDescription: 'V жидкости / V нефти'
   };
 };
