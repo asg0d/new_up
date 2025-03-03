@@ -10,7 +10,7 @@ import {
   LineElement,
   PointElement
 } from 'chart.js';
-import { Chart } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,
@@ -84,7 +84,7 @@ const ResultsBarChart = ({ results }) => {
 
   return (
     <div style={{ height: '300px', marginTop: '20px' }}>
-      <Chart type='bar' data={data} options={options} />
+      <Bar data={data} options={options} />
     </div>
   );
 };
