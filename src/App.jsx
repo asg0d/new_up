@@ -4,7 +4,6 @@ import {
   Button,
   Paper,
   Typography,
-  Container,
   Tabs,
   Tab,
   TextField,
@@ -12,7 +11,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Grid,
 } from '@mui/material';
 import DataGrid from './components/DataGrid';
 import ConsoleOutput from './components/ConsoleOutput';
@@ -40,6 +38,10 @@ function App() {
   const [error, setError] = useState(null);
   const [showCharts, setShowCharts] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [geologicalReserves, setGeologicalReserves] = useState('');
+
+  const [cumulativeOilProduction, setCumulativeOilProduction] = useState(0);
+  const [remainingOilReserves, setRemainingOilReserves] = useState(0);
 
   const handleFileImport = async (event) => {
     const file = event.target.files[0];
@@ -49,6 +51,15 @@ function App() {
         setData(importedData);
         setCalculationResults({});
         setError(null);
+
+        const lastRow = importedData[importedData.length - 1];
+        if (lastRow) {
+          setCumulativeOilProduction(parseFloat(lastRow.oil) || 0);
+          setRemainingOilReserves(parseFloat(lastRow.liquid) || 0);
+          console.log("Cumulative Oil Production ", lastRow.oil);
+          console.log("Cumulative remaining Reserves ", lastRow.liquid);
+          
+        }
       } catch (error) {
         console.error('Error importing file:', error);
         setError('Error importing file: ' + error.message);
@@ -89,13 +100,55 @@ function App() {
     }
   };
 
-  const handleExport = async () => {
-    try {
-      await exportExcel(data, calculationResults);
-    } catch (error) {
-      console.error('Error exporting file:', error);
-      setError('Error exporting file: ' + error.message);
+  const handleExport = () => {
+    if (!calculationResults || Object.keys(calculationResults).length === 0) {
+      setError('No results to export');
+      return;
     }
+
+    const resultsArray = Object.values(calculationResults);
+    const validResults = resultsArray.filter(result => result.remainingOilReserves !== null);
+    const averageValue = validResults.length > 0
+      ? validResults.reduce((sum, r) => sum + r.remainingOilReserves, 0) / validResults.length
+      : null;
+
+
+    const averageExtrOil = validResults.length > 0
+      ? validResults.reduce((sum, r) => sum + r.extractableOilReserves, 0) / 4
+      : null;
+
+    const averageRemOil = validResults.length > 0
+      ? validResults.reduce((sum, r) => sum + r.remainingOilReserves, 0) / 4
+      : null;
+
+    const totalNumerator = cumulativeOilProduction + remainingOilReserves;
+  
+    
+    const orc = geologicalReserves && geologicalReserves > 0
+      ? (totalNumerator / parseFloat(geologicalReserves)).toFixed(3)
+      : null;
+
+    const exportData = {
+      chartData: validResults.map(result => ({
+        method: result.method,
+        remainingOilReserves: result.remainingOilReserves,
+        extractableOilReserves: result.extractableOilReserves,
+        coefficients: result.coefficients
+      })),
+      average: {
+        remainingOilReserves: averageRemOil,
+        extractableOilReserves: averageExtrOil
+      },
+      orcCalculation: {
+        geologicalReserves: parseFloat(geologicalReserves) || 0,
+        cumulativeOilProduction,
+        remainingOilReserves,
+        totalNumerator,
+        orc: orc || 0
+      }
+    };
+
+    exportExcel(exportData);
   };
 
   const handleShowCharts = () => {
@@ -113,18 +166,16 @@ function App() {
   const currentMethodResults = calculationResults[methodNames[activeTab]];
 
   return (
-    <Box sx={{ 
+    <Box sx={{
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden'
     }}>
-      {/* Header */}
       <Typography variant="h4" component="h1" sx={{ p: 3, pb: 0, color: '#1976d2', fontWeight: 500 }}>
         Инженерный калькулятор
       </Typography>
 
-      {/* Top Controls */}
       <Paper sx={{ m: 3, mb: 0, p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
         <Button variant="contained" component="label">
           Импорт
@@ -161,6 +212,14 @@ function App() {
           sx={{ width: 100 }}
         />
 
+        <TextField
+          label="Q geological reserves"
+          value={geologicalReserves}
+          onChange={(e) => setGeologicalReserves(e.target.value)}
+          size="small"
+          sx={{ width: 200 }}
+        />
+
         <Box sx={{ flex: 1 }} />
 
         <Button variant="contained" onClick={handleCalculate}>
@@ -177,19 +236,16 @@ function App() {
         </Button>
       </Paper>
 
-      {/* Main Content */}
       <Box sx={{ flex: 1, m: 3, mt: 2, display: 'flex', gap: 2, minHeight: 0 }}>
-        {/* Left side - Data Grid */}
         <Paper sx={{ flex: 1, overflow: 'hidden', borderRadius: 2 }}>
           <Box sx={{ height: '100%', overflow: 'auto' }}>
             <DataGrid data={data} setData={setData} />
           </Box>
         </Paper>
 
-        {/* Right side - Results */}
         <Paper sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: 2 }}>
-          <Tabs 
-            value={activeTab} 
+          <Tabs
+            value={activeTab}
             onChange={(e, v) => setActiveTab(v)}
             variant="scrollable"
             sx={{ borderBottom: 1, borderColor: 'divider' }}
@@ -207,7 +263,7 @@ function App() {
               <ConsoleOutput result={currentMethodResults} />
             )}
             {showResults && Object.keys(calculationResults).length > 0 && (
-              <ResultsTable results={Object.values(calculationResults)} />
+              <ResultsTable results={Object.values(calculationResults)} cumulativeOilProduction={cumulativeOilProduction} remainingOilReserves={remainingOilReserves} />
             )}
           </Box>
         </Paper>
@@ -217,6 +273,8 @@ function App() {
         open={showCharts}
         onClose={() => setShowCharts(false)}
         results={Object.values(calculationResults)}
+        cumulativeOilProduction={data[data.length - 1]?.oil || 0}
+        remainingOilReserves={Object.values(calculationResults).reduce((sum, r) => sum + (r.remainingOilReserves || 0), 0) / 4}
       />
 
       {error && (

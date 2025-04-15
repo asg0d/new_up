@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,6 +13,9 @@ import {
   PointElement
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import { FormGroup, FormControlLabel, Checkbox, Box, Button } from '@mui/material';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import { exportExcel } from '../services/excelService';
 
 ChartJS.register(
   CategoryScale,
@@ -27,14 +30,44 @@ ChartJS.register(
   Legend
 );
 
-const ResultsBarChart = ({ results }) => {
-  const validResults = results.filter(result => result.remainingOilReserves !== null);
-  const averageValue = validResults.length > 0 
-    ? validResults.reduce((sum, r) => sum + r.remainingOilReserves, 0) / 4 
+const ResultsBarChart = ({ results, cumulativeOilProduction, remainingOilReserves }) => {
+  const [geologicalReserves, setGeologicalReserves] = useState('');
+  const [selectedMethods, setSelectedMethods] = useState({
+    'Максимов': true,
+    'Назаров-Сипачев': true,
+    'Сипачев-Посевич': true,
+    'Сазонов': true,
+    'Пирвердян': true,
+    'Камбаров': true
+  });
+
+  const handleMethodChange = (method) => {
+    setSelectedMethods(prev => ({
+      ...prev,
+      [method]: !prev[method]
+    }));
+  };
+
+  // Filter results based on selected methods
+  const validResults = results
+    .filter(result => result.remainingOilReserves !== null)
+    .filter(result => selectedMethods[result.method]);
+
+  const averageValue = validResults.length > 0
+    ? validResults.reduce((sum, r) => sum + r.remainingOilReserves, 0) / validResults.length
     : null;
 
   const labels = validResults.map(result => result.method);
-  
+
+  // Fixed values for ORC calculation
+  const cumulative = cumulativeOilProduction;
+  const remaining = remainingOilReserves;
+  const totalNumerator = cumulative + remaining;
+
+  const orc = geologicalReserves && geologicalReserves > 0
+    ? (totalNumerator / parseFloat(geologicalReserves)).toFixed(3)
+    : null;
+
   const data = {
     labels,
     datasets: [
@@ -88,9 +121,87 @@ const ResultsBarChart = ({ results }) => {
     }
   };
 
+  const handleExport = () => {
+    const exportData = {
+      chartData: validResults.map(result => ({
+        method: result.method,
+        remainingOilReserves: result.remainingOilReserves,
+        extractableOilReserves: result.extractableOilReserves,
+        coefficients: result.coefficients
+      })),
+      average: {
+        remainingOilReserves: averageValue
+      },
+      orcCalculation: {
+        geologicalReserves: parseFloat(geologicalReserves) || 0,
+        cumulativeOilProduction,
+        remainingOilReserves,
+        totalNumerator,
+        orc: orc || 0
+      }
+    };
+
+    exportExcel(exportData);
+  };
+
   return (
-    <div style={{ height: '300px', marginTop: '20px' }}>
-      <Bar data={data} options={options} />
+    <div>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <FormGroup row sx={{ flexWrap: 'wrap', gap: 2 }}>
+          {Object.keys(selectedMethods).map(method => (
+            <FormControlLabel
+              key={method}
+              control={
+                <Checkbox
+                  checked={selectedMethods[method]}
+                  onChange={() => handleMethodChange(method)}
+                />
+              }
+              label={method}
+            />
+          ))}
+        </FormGroup>
+      </Box>
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{ marginRight: '10px' }}>
+          Q geological reserves:
+          <input
+            type="number"
+            value={geologicalReserves}
+            onChange={(e) => setGeologicalReserves(e.target.value)}
+            style={{ marginLeft: '10px' }}
+          />
+        </label>
+        {orc !== null && (
+          <div style={{ marginTop: '10px' }}>
+            <div>
+              Накопленная добыча нефти: {
+                cumulativeOilProduction && !isNaN(cumulativeOilProduction)
+                  ? cumulativeOilProduction.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+                  : 'N/A'
+              }
+            </div>
+            <div>
+              V остаточные: {
+                averageValue && !isNaN(averageValue)
+                  ? averageValue.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+                  : 'N/A'
+              }
+            </div>
+            <div>
+              Total: {
+                totalNumerator && !isNaN(totalNumerator)
+                  ? totalNumerator.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+                  : 'N/A'
+              }
+            </div>
+            <div>ORC (КИН) = {orc}</div>
+          </div>
+        )}
+      </div>
+      <div style={{ height: '300px' }}>
+        <Bar data={data} options={options} />
+      </div>
     </div>
   );
 };

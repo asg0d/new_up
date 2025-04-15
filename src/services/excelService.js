@@ -8,16 +8,16 @@ export function importExcel(file) {
         console.log('Reading Excel file...');
         const workbook = XLSX.read(e.target.result, { type: 'binary' });
         console.log('Workbook:', workbook);
-        
+
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-        
+
         // Get the range of data
         const range = XLSX.utils.decode_range(worksheet['!ref']);
         console.log('Data range:', range);
 
         // Convert to array of arrays with header:1 to get raw rows
-        const rawData = XLSX.utils.sheet_to_json(worksheet, { 
+        const rawData = XLSX.utils.sheet_to_json(worksheet, {
           header: 1,
           raw: false,
           defval: ''
@@ -29,7 +29,7 @@ export function importExcel(file) {
           .filter(row => row && row.length > 0 && row[0]) // Skip empty rows
           .map((row, index, array) => {
             console.log('Processing row:', row);
-            
+
             // Get values, replace commas with dots for numbers
             const year = row[0]?.toString().trim();
             const oil = row[1]?.toString().trim().replace(',', '.') || '0';
@@ -47,11 +47,11 @@ export function importExcel(file) {
               const prevLiquid = parseFloat(prevRow[2]?.toString().trim().replace(',', '.') || '0');
               const prevOil = parseFloat(prevRow[1]?.toString().trim().replace(',', '.') || '0');
               const prevWater = Math.max(0, prevLiquid - prevOil);
-              
+
               // Swapped the formula to use water change over liquid change
               const waterChange = water - prevWater;
               const liquidChange = liquidNum - prevLiquid;
-              
+
               if (liquidChange !== 0) {
                 waterCut = (waterChange / liquidChange) * 100;
               }
@@ -71,7 +71,9 @@ export function importExcel(file) {
           });
 
         console.log('Final formatted data:', formattedData);
+        console.log('Final formatted new data:', formattedData[formattedData.length - 1]?.oil);
         resolve(formattedData);
+        resolve({ cumulativeOilProduction: formattedData[formattedData.length - 1]?.oil, });
       } catch (error) {
         console.error('Error processing Excel file:', error);
         reject(error);
@@ -86,21 +88,46 @@ export function importExcel(file) {
 }
 
 export function exportExcel(data) {
-  // Prepare data for export
-  const exportData = data.map(row => ({
-    'Годы': row.year,
-    'Нефти': row.oil,
-    'Жидкости': row.liquid,
-    'Воды': row.water,
-    'Обводненность': row.waterCut,
-    'Active points': row.active ? 1 : 0
+  // Create workbook
+  const wb = XLSX.utils.book_new();
+
+  // Export chart data
+  const chartData = data.chartData.map(row => ({
+    'Метод': row.method,
+    'V остаточные': row.remainingOilReserves,
+    'V извлекаемые': row.extractableOilReserves,
+    'Коэффициент A': row.coefficients?.A || 0,
+    'Коэффициент B': row.coefficients?.B || 0,
+    'R²': row.coefficients?.R2 || 0
   }));
 
-  // Create worksheet
-  const ws = XLSX.utils.json_to_sheet(exportData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Data');
+  // Add average row
+  if (data.average.remainingOilReserves !== null) {
+    chartData.push({
+      'Метод': 'Среднее значение',
+      'V остаточные': data.average.remainingOilReserves,
+      'V извлекаемые': data.average.extractableOilReserves,
+      'Коэффициент A': '',
+      'Коэффициент B': '',
+      'R²': ''
+    });
+  }
+
+  const wsChart = XLSX.utils.json_to_sheet(chartData);
+  // XLSX.utils.book_append_sheet(wb, wsChart, 'Результаты методов');
+
+  // Export ORC calculation data
+  const orcData = [
+    { 'Параметр': 'Q geological reserves', 'Значение': data.orcCalculation.geologicalReserves },
+    { 'Параметр': 'Накопленные добыча нефть', 'Значение': data.orcCalculation.cumulativeOilProduction },
+    { 'Параметр': 'V остаточные (средниее)', 'Значение': data.average.remainingOilReserves },
+    { 'Параметр': 'V извлекаемые (средниее)', 'Значение': data.average.extractableOilReserves },
+    { 'Параметр': 'ORC (КИН)', 'Значение': data.orcCalculation.orc }
+  ];
+
+  const wsOrc = XLSX.utils.json_to_sheet(orcData);
+  XLSX.utils.book_append_sheet(wb, wsOrc, 'ORC расчет');
 
   // Generate and download file
-  XLSX.writeFile(wb, 'data_export.xlsx');
+  XLSX.writeFile(wb, 'chart_results.xlsx');
 }

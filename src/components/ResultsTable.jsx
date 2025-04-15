@@ -2,24 +2,33 @@ import React from 'react';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Box } from '@mui/material';
 import ResultsBarChart from './ResultsBarChart';
 
-const ResultsTable = ({ results }) => {
+const ResultsTable = ({ results, cumulativeOilProduction, remainingOilReserves }) => {
   const formatNumber = (num) => {
     if (num === null || num === undefined) return 'N/A';
-    return Number(num).toFixed(4);
+    const formatted = Number(num).toFixed(8);
+    // If the number is 0, return with 8 zeros after decimal
+    if (Number(formatted) === 0) {
+      return '0.00000000';
+    }
+    return formatted;
   };
 
   // Calculate averages
-  const validResults = results.filter(result => 
-    result.extractableOilReserves !== null && 
+  const validResults = results.filter(result =>
+    result.extractableOilReserves !== null &&
     result.remainingOilReserves !== null
   );
 
-  const averageExtrOil = validResults.length > 0 
-    ? validResults.reduce((sum, r) => sum + r.extractableOilReserves, 0) / 4 
+  const averageExtrOil = validResults.length > 0
+    ? validResults.reduce((sum, r) => sum + r.extractableOilReserves, 0) / 4
     : null;
 
-  const averageRemOil = validResults.length > 0 
-    ? validResults.reduce((sum, r) => sum + r.remainingOilReserves, 0) / 4 
+  const averageRemOil = validResults.length > 0
+    ? validResults.reduce((sum, r) => sum + r.remainingOilReserves, 0) / 4
+    : null;
+
+  const birnarsi1 = validResults.length > 0
+    ? validResults.reduce((sum, r) => sum + r.remainingOilReserves, 0) / 4
     : null;
 
   return (
@@ -49,9 +58,9 @@ const ResultsTable = ({ results }) => {
           </TableBody>
         </Table>
       </TableContainer>
-      
+
       <Paper sx={{ p: 2 }}>
-        <ResultsBarChart results={results} />
+        <ResultsBarChart results={results} cumulativeOilProduction={cumulativeOilProduction} remainingOilReserves={remainingOilReserves} />
       </Paper>
     </Box>
   );
